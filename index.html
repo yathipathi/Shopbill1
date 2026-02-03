@@ -7,8 +7,7 @@
 <style>
 body{font-family:Arial;background:#f4f4f4;margin:20px}
 .container{max-width:1100px;margin:auto;background:#fff;padding:20px;border-radius:10px}
-h1{text-align:center}
-h2{text-align:center;color:#555}
+h1,h2{text-align:center}
 fieldset{border:1px solid #ccc;padding:10px;margin-bottom:12px;border-radius:8px}
 legend{font-weight:bold}
 input,select{padding:6px;width:100%;max-width:260px;margin-bottom:6px}
@@ -47,11 +46,10 @@ button{padding:7px 12px;border:none;border-radius:5px;margin:3px;font-weight:bol
 <option>Online</option>
 </select>
 
-<!-- NAMUNA BALLOT -->
 <fieldset>
 <legend>⅛ Namuna Ballot</legend>
 <select id="namunaCopies">
-<option value="0">Select</option>
+<option value="">Select</option>
 <option>200</option>
 <option>500</option>
 <option>600</option>
@@ -63,11 +61,10 @@ button{padding:7px 12px;border:none;border-radius:5px;margin:3px;font-weight:bol
 <input id="namunaAmount" class="amount" readonly placeholder="Amount">
 </fieldset>
 
-<!-- POSTERS -->
 <fieldset>
 <legend>Posters</legend>
 <select id="posterCopies">
-<option value="0">Select</option>
+<option value="">Select</option>
 <option>100</option>
 <option>200</option>
 <option>500</option>
@@ -76,18 +73,16 @@ button{padding:7px 12px;border:none;border-radius:5px;margin:3px;font-weight:bol
 <input id="posterAmount" class="amount" readonly placeholder="Amount">
 </fieldset>
 
-<!-- STICKERS -->
 <fieldset>
 <legend>Stickers (₹60 Each)</legend>
 <input type="number" id="stickerCopies" placeholder="Quantity">
 <input id="stickerAmount" class="amount" readonly placeholder="Amount">
 </fieldset>
 
-<!-- MANUAL ITEM -->
 <fieldset>
 <legend>Extra / Manual Item</legend>
-<input type="text" id="extraTitle" placeholder="Enter item name">
-<input type="number" id="extraInput" placeholder="Enter price">
+<input type="text" id="extraTitle" placeholder="Item name">
+<input type="number" id="extraInput" placeholder="Price">
 <input id="extraAmount" class="amount" readonly placeholder="Amount">
 </fieldset>
 
@@ -122,13 +117,12 @@ Total Amount: ₹ <span id="grandTotal">0</span>
 let savedBills=[];
 let nextId=1;
 
-// RATE TABLES
 const namunaRates={200:700,500:1400,1000:1200};
 const posterRates={100:350,200:700,500:900,1000:2400};
 
 function autoRate(c,table){
 c=parseInt(c)||0;
-if(c<=0)return 0;
+if(!c)return 0;
 if(table[c])return table[c];
 const k=Object.keys(table).map(Number).sort((a,b)=>a-b);
 let l=null,h=null;
@@ -139,17 +133,17 @@ return Math.round(table[l]+(c-l)*(table[h]-table[l])/(h-l));
 }
 
 function updateTotals(){
-const n = autoRate(namunaCopies.value, namunaRates);
-const p = autoRate(posterCopies.value, posterRates);
-const s = (parseInt(stickerCopies.value)||0)*60;
-const e = parseInt(extraInput.value)||0;
+const n=autoRate(namunaCopies.value,namunaRates);
+const p=autoRate(posterCopies.value,posterRates);
+const s=(parseInt(stickerCopies.value)||0)*60;
+const e=parseInt(extraInput.value)||0;
 
-namunaAmount.value = n || "";
-posterAmount.value = p || "";
-stickerAmount.value = s || "";
-extraAmount.value = e || "";
+namunaAmount.value=n||"";
+posterAmount.value=p||"";
+stickerAmount.value=s||"";
+extraAmount.value=e||"";
 
-grandTotal.textContent = n + p + s + e;
+grandTotal.textContent=n+p+s+e;
 }
 
 document.querySelectorAll("input,select").forEach(el=>{
@@ -159,7 +153,7 @@ el.addEventListener("change",updateTotals);
 
 function clearForm(){
 document.querySelectorAll("input").forEach(i=>{if(i.id!=="billDate")i.value=""});
-document.querySelectorAll("select").forEach(s=>{if(s.id!=="paymentMode")s.value="0"});
+document.querySelectorAll("select").forEach(s=>s.value="");
 grandTotal.textContent=0;
 billDate.value=new Date().toLocaleDateString("en-IN");
 }
@@ -218,14 +212,24 @@ updateTotals();
 const num=(customerWhatsapp.value||"").replace(/\D/g,"");
 if(num.length<10)return alert("Invalid number");
 
-let extraLine = extraTitle.value
-  ? `\n${extraTitle.value}: ₹${extraAmount.value||0}`
-  : "";
+let items="";
 
-const msg=`SREE LAXMI OFFSET PRINTERS
-Customer: ${customerName.value}
+if(namunaCopies.value) items+=`\n• Namuna Ballot (${namunaCopies.value} copies): ₹${namunaAmount.value}`;
+if(posterCopies.value) items+=`\n• Posters (${posterCopies.value} copies): ₹${posterAmount.value}`;
+if(stickerCopies.value) items+=`\n• Stickers (${stickerCopies.value} pcs): ₹${stickerAmount.value}`;
+if(extraTitle.value) items+=`\n• ${extraTitle.value}: ₹${extraAmount.value}`;
+
+const msg=
+`🖨️ SREE LAXMI OFFSET PRINTERS
+-------------------------
+Customer: ${customerName.value||"-"}
 Date: ${billDate.value}
-Total: ₹${grandTotal.textContent}${extraLine}`;
+Payment: ${paymentMode.value}
+
+Items:${items}
+
+-------------------------
+Total Amount: ₹${grandTotal.textContent}`;
 
 window.open(`https://wa.me/91${num}?text=`+encodeURIComponent(msg));
 }
